@@ -122,7 +122,7 @@ class Command:
                     if bit == 1 and current_bit == 1:
                         self.interpreter.V[0xf].value = 1
                     self.interpreter.display.set_pixel(pixel_pos,
-                                                            bit ^ current_bit)
+                                                       bit ^ current_bit)
 
     class CheckPushed(BaseCommand):
 

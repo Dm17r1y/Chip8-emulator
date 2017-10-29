@@ -21,3 +21,4 @@ Used buttons:
 * a s d f
 * z x c v
 
+Save current game: F4

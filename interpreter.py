@@ -26,7 +26,6 @@ class Interpreter:
         self.initialize_sprites(sprites)
         self._need_redraw = False
 
-
     def initialize_sprites(self, sprites):
         for i, sprite_line in enumerate(sprites):
             self.memory.store_value(i, sprite_line)

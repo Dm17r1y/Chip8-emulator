@@ -90,7 +90,7 @@ class TestCommandsDecode(unittest.TestCase):
     def test_code_c(self):
         self.check_correct_command(0xc123, Command.Random,
                                    [self.interpreter.V[1],
-                                   0x23])
+                                    0x23])
 
     def test_code_d(self):
         self.check_correct_command(0xd123, Command.Draw,
@@ -126,7 +126,6 @@ class TestCommandsDecode(unittest.TestCase):
     def test_wrong_command(self):
         self.assertRaises(Exception, self.interpreter.decode, 0x0000)
 
-
     def check_correct_command(self, code, command, arguments):
         comm, *args = self.interpreter.decode(code)
         self.assertEqual(command, comm)
@@ -145,6 +144,7 @@ class TestController:
 
     def get_key_code(self):
         return self.return_value
+
 
 class TestExecuteCommands(unittest.TestCase):
 
@@ -220,7 +220,7 @@ class TestExecuteCommands(unittest.TestCase):
         self.interpreter.V[0].value = 100
         Command.Xor(self.interpreter)\
             .execute_command(self.interpreter.V[0], 200)
-        self.assertEqual(100^200, self.interpreter.V[0].value)
+        self.assertEqual(100 ^ 200, self.interpreter.V[0].value)
 
     def test_sub(self):
         self.interpreter.V[0].value = 100
@@ -383,7 +383,6 @@ class InterpreterTests(unittest.TestCase):
 
     def test_initialize_sprites(self):
 
-
         for i, j in zip(self.correct_sprites, self.interpreter.memory._memory):
             self.assertEqual(i, j)
 
@@ -424,6 +423,7 @@ class InterpreterTests(unittest.TestCase):
                          new_interpreter.memory._memory)
         self.assertEqual(self.interpreter.display._pixels,
                          new_interpreter.display._pixels)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+
 class Point:
 
     def __init__(self, x, y):
@@ -24,6 +25,7 @@ class Point:
     def y(self):
         return self._y
 
+
 class Display:
 
     def __init__(self):
@@ -38,7 +40,6 @@ class Display:
         x = x % Display.WIDTH
         y = y % Display.HEIGHT
         return Point(x, y)
-
 
     def set_pixel(self, point, value):
         point = Display.get_correct_point(point)

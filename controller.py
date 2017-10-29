@@ -1,6 +1,7 @@
-#/usr/bin/python3
+#!/usr/bin/python3
 
 from PyQt5.QtCore import Qt
+
 
 class Controller:
 

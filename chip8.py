@@ -53,13 +53,14 @@ class MainWindow(QtWidgets.QWidget):
 
     def save_game(self):
         interpreter_state = self.interpreter.serialize_state()
-        path = os.path.join("saves", self.game  + "#"
-                            + datetime.datetime.now()
+        path = os.path.join("saves", self.game + "#" +
+                            datetime.datetime.now()
                             .strftime('%Y-%m-%d %H:%M:%S'))
         with open(path, "wb") as f:
             f.write(self.game.encode())
             f.write(b'\n')
             f.write(interpreter_state)
+
 
 class Display(QtWidgets.QFrame):
 
@@ -67,7 +68,7 @@ class Display(QtWidgets.QFrame):
         super().__init__(parent)
         self.interpreter = parent.interpreter
 
-    def paintEvent(self, QPaintEvent):
+    def paintEvent(self, event):
         painter = QtGui.QPainter(self)
         display = self.interpreter.display
         for x in range(display.WIDTH):
@@ -77,6 +78,7 @@ class Display(QtWidgets.QFrame):
                     painter.fillRect(x*10, y*10, 10, 10, QtGui.QColor("white"))
                 else:
                     painter.fillRect(x*10, y*10, 10, 10, QtGui.QColor("black"))
+
 
 class StartWindow(QtWidgets.QWidget):
 
@@ -120,9 +122,8 @@ class StartWindow(QtWidgets.QWidget):
         self.setLayout(vbox_layout)
         self.show()
 
-
     def start_game(self, *args, **kwargs):
-        path = os.path.join("sprites" , self.sprites.currentText())
+        path = os.path.join("sprites", self.sprites.currentText())
         with open(path, "rb") as f:
             sprites = [byte for byte in f.read()]
 

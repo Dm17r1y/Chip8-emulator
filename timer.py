@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
+
 def empty_func():
     pass
+
 
 class Timer:
 
