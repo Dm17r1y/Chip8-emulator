@@ -75,7 +75,7 @@ class StartWindow(QtWidgets.QWidget):
         vbox_layout.addWidget(change_speed_label)
 
         self.sld = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
-        self.sld.setSliderPosition(90)
+        self.sld.setSliderPosition(85)
         vbox_layout.addWidget(self.sld)
 
         self.games = QtWidgets.QComboBox()
