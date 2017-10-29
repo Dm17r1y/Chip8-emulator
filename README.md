@@ -12,7 +12,7 @@ Requirements:
 Run:
 ---
 ```
- python3 chip-8.py
+ python3 chip8.py
 ```
 
 Used buttons:
