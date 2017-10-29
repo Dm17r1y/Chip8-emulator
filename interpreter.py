@@ -2,8 +2,11 @@
 
 import memory
 from commands import Command
-from display import Display
+from display import Display, Point
+import struct
+import pickle
 import timer
+
 
 class Interpreter:
 
@@ -148,3 +151,18 @@ class Interpreter:
         command = command_type(self)
         self.instruction_pointer += 2
         command.execute_command(*args)
+
+    def serialize_state(self):
+        return pickle.dumps(self)
+
+    def load_state(self, state):
+        interpreter = pickle.loads(state)
+        for i in range(16):
+            self.V[i].value = interpreter.V[i].value
+        self.I.value = interpreter.I.value
+        self.instruction_pointer = interpreter.instruction_pointer
+        self.memory = interpreter.memory
+        self.stack = interpreter.stack
+        self.display = interpreter.display
+        self.delay_timer.ticks = interpreter.delay_timer.ticks
+        self.sound_timer.ticks = interpreter.sound_timer.ticks

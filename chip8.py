@@ -5,17 +5,25 @@ from controller import Controller
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
 from display import Point
+import datetime
+import re
 import os
 
 
 class MainWindow(QtWidgets.QWidget):
 
-    def __init__(self, game, speed, sprites):
+    def __init__(self, game, speed, sprites, state=None):
         super().__init__()
+        self.game = game
         self.sound = QtMultimedia.QSound('beep.wav')
         self.controller = Controller()
-        self.interpreter = Interpreter(game, self.controller, sprites,
+
+        path = os.path.join("games", game)
+        self.interpreter = Interpreter(path, self.controller, sprites,
                                        self.sound.play)
+        if state is not None:
+            self.interpreter.load_state(state)
+
         self.display = Display(self)
         self.display.move(0, 0)
         self.display.resize(640, 320)
@@ -34,12 +42,24 @@ class MainWindow(QtWidgets.QWidget):
         self.interpreter.delay_timer.tick()
         self.interpreter.sound_timer.tick()
 
-    def keyPressEvent(self, QKeyEvent):
-        self.controller.set_key_code(QKeyEvent.key())
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_F4:
+            self.save_game()
+        else:
+            self.controller.set_key_code(event.key())
 
-    def keyReleaseEvent(self, QKeyEvent):
+    def keyReleaseEvent(self, event):
         self.controller.release_key()
 
+    def save_game(self):
+        interpreter_state = self.interpreter.serialize_state()
+        path = os.path.join("saves", self.game  + "#"
+                            + datetime.datetime.now()
+                            .strftime('%Y-%m-%d %H:%M:%S'))
+        with open(path, "wb") as f:
+            f.write(self.game.encode())
+            f.write(b'\n')
+            f.write(interpreter_state)
 
 class Display(QtWidgets.QFrame):
 
@@ -62,6 +82,7 @@ class StartWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
+        self.move(100, 100)
 
         vbox_layout = QtWidgets.QVBoxLayout()
 
@@ -90,21 +111,40 @@ class StartWindow(QtWidgets.QWidget):
         self.sprites.addItems(sprite_list)
         vbox_layout.addWidget(self.sprites)
 
+        load_button = QtWidgets.QPushButton(self)
+        load_button.setText("Load game")
+        load_button.clicked.connect(self.load_game)
+        vbox_layout.addWidget(load_button)
+
         vbox_layout.addStretch(1)
         self.setLayout(vbox_layout)
         self.show()
+
 
     def start_game(self, *args, **kwargs):
         path = os.path.join("sprites" , self.sprites.currentText())
         with open(path, "rb") as f:
             sprites = [byte for byte in f.read()]
+
         if len(sprites) != 80:
             raise Exception("Sprites length must be 80 bytes")
-        game_path = os.path.join("games", self.games.currentText())
-        self.window = MainWindow(game_path, self.sld.value(), sprites)
 
-    def change_sprites(self):
-        pass
+        game = self.games.currentText()
+        speed = self.sld.value()
+        self.window = MainWindow(game, speed, sprites)
+
+    def load_game(self):
+        file = QtWidgets.QFileDialog.getOpenFileName(self, "load save",
+                                                     "saves")[0]
+        if file != '':
+            with open(file, "rb") as f:
+                data = f.read()
+                match = re.match(rb"(.*?)\n", data)
+                game = match.group(1).decode()
+                speed = self.sld.value()
+                sprites = self.sprites.currentText()
+                state = data[match.end():]
+                self.window = MainWindow(game, speed, sprites, state)
 
 
 if __name__ == '__main__':

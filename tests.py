@@ -9,7 +9,7 @@ from commands import Command
 class TestCommandsDecode(unittest.TestCase):
 
     def setUp(self):
-        self.interpreter = Interpreter("games/UFO", None)
+        self.interpreter = Interpreter("games/UFO", None, [])
         for i in range(16):
             self.interpreter.V[i].value = i*10
 
@@ -150,7 +150,7 @@ class TestExecuteCommands(unittest.TestCase):
 
     def setUp(self):
         self.controller = TestController(42)
-        self.interpreter = Interpreter("games/UFO", self.controller)
+        self.interpreter = Interpreter("games/UFO", self.controller, [])
         self.interpreter.V[0xf].value = 1
 
     def test_clear(self):
@@ -334,9 +334,9 @@ class TestExecuteCommands(unittest.TestCase):
 
     def test_store_decimal_to_memory(self):
         Command.StoreDecimalToMemory(self.interpreter).execute_command(254)
-        self.assertEqual(4, self.interpreter.memory.get_value(0))
+        self.assertEqual(2, self.interpreter.memory.get_value(0))
         self.assertEqual(5, self.interpreter.memory.get_value(1))
-        self.assertEqual(2, self.interpreter.memory.get_value(2))
+        self.assertEqual(4, self.interpreter.memory.get_value(2))
 
     def test_store_registers(self):
         self.interpreter.V[0].value = 10
@@ -359,30 +359,32 @@ class TestExecuteCommands(unittest.TestCase):
 
 class InterpreterTests(unittest.TestCase):
 
+    correct_sprites = [
+        0xf0, 0x90, 0x90, 0x90, 0xf0,       # 0
+        0x20, 0x60, 0x20, 0x20, 0x70,       # 1
+        0xf0, 0x10, 0xf0, 0x80, 0xf0,       # 2
+        0xf0, 0x10, 0xf0, 0x10, 0xf0,       # 3
+        0x90, 0x90, 0xf0, 0x10, 0x10,       # 4
+        0xf0, 0x80, 0xf0, 0x10, 0xf0,       # 5
+        0xf0, 0x80, 0xf0, 0x90, 0xf0,       # 6
+        0xf0, 0x10, 0x20, 0x40, 0x40,       # 7
+        0xf0, 0x90, 0xf0, 0x90, 0xf0,       # 8
+        0xf0, 0x90, 0xf0, 0x10, 0xf0,       # 9
+        0xf0, 0x90, 0xf0, 0x90, 0x90,       # A
+        0xe0, 0x90, 0xe0, 0x90, 0xe0,       # B
+        0xf0, 0x80, 0x80, 0x80, 0xf0,       # C
+        0xe0, 0x90, 0x90, 0x90, 0xe0,       # D
+        0xf0, 0x80, 0xf0, 0x80, 0xf0,       # E
+        0xf0, 0x80, 0xf0, 0x80, 0x80        # F
+    ]
+
     def setUp(self):
-        self.interpreter = Interpreter("games/UFO", None)
+        self.interpreter = Interpreter("games/UFO", None, self.correct_sprites)
 
     def test_initialize_sprites(self):
-        correct_sequence = [
-            0xf0, 0x90, 0x90, 0x90, 0xf0,       # 0
-            0x20, 0x60, 0x20, 0x20, 0x70,       # 1
-            0xf0, 0x10, 0xf0, 0x80, 0xf0,       # 2
-            0xf0, 0x10, 0xf0, 0x10, 0xf0,       # 3
-            0x90, 0x90, 0xf0, 0x10, 0x10,       # 4
-            0xf0, 0x80, 0xf0, 0x10, 0xf0,       # 5
-            0xf0, 0x80, 0xf0, 0x90, 0xf0,       # 6
-            0xf0, 0x10, 0x20, 0x40, 0x40,       # 7
-            0xf0, 0x90, 0xf0, 0x90, 0xf0,       # 8
-            0xf0, 0x90, 0xf0, 0x10, 0xf0,       # 9
-            0xf0, 0x90, 0xf0, 0x90, 0x90,       # A
-            0xe0, 0x90, 0xe0, 0x90, 0xe0,       # B
-            0xf0, 0x80, 0x80, 0x80, 0xf0,       # C
-            0xe0, 0x90, 0x90, 0x90, 0xe0,       # D
-            0xf0, 0x80, 0xf0, 0x80, 0xf0,       # E
-            0xf0, 0x80, 0xf0, 0x80, 0x80        # F
-        ]
 
-        for i, j in zip(correct_sequence, self.interpreter.memory._memory):
+
+        for i, j in zip(self.correct_sprites, self.interpreter.memory._memory):
             self.assertEqual(i, j)
 
     def test_execute_command(self):
@@ -394,6 +396,34 @@ class InterpreterTests(unittest.TestCase):
         code = self.interpreter.read_instruction()
         self.assertEqual(0xa2cd, code)
 
+    def test_serialization(self):
+        self.interpreter.sound_timer.ticks = 10
+        self.interpreter.delay_timer.ticks = 20
+        for i in range(16):
+            self.interpreter.V[i].value = i
+        self.interpreter.I.value = 255
+        self.interpreter.instruction_pointer = 30
+        self.interpreter.stack.push(100)
+        self.interpreter.display.set_pixel(Point(0, 1), 1)
+
+        serialize = self.interpreter.serialize_state()
+        new_interpreter = Interpreter("games/UFO", None, [])
+        new_interpreter.load_state(serialize)
+
+        self.assertEqual(10, new_interpreter.sound_timer.ticks)
+        self.assertEqual(20, new_interpreter.delay_timer.ticks)
+        for i in range(16):
+            self.assertEqual(i, new_interpreter.V[i].value)
+
+        self.assertEqual(255, new_interpreter.I.value)
+        self.assertEqual(30, new_interpreter.instruction_pointer)
+        self.assertEqual(self.interpreter.stack._memory,
+                         new_interpreter.stack._memory)
+        self.assertEqual(1, new_interpreter.stack._stack_pointer)
+        self.assertEqual(self.interpreter.memory._memory,
+                         new_interpreter.memory._memory)
+        self.assertEqual(self.interpreter.display._pixels,
+                         new_interpreter.display._pixels)
 
 if __name__ == "__main__":
     unittest.main()
