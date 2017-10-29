@@ -10,11 +10,12 @@ import os
 
 class MainWindow(QtWidgets.QWidget):
 
-    def __init__(self, game, speed):
+    def __init__(self, game, speed, sprites):
         super().__init__()
         self.sound = QtMultimedia.QSound('beep.wav')
         self.controller = Controller()
-        self.interpreter = Interpreter(game, self.controller, self.sound.play)
+        self.interpreter = Interpreter(game, self.controller, sprites,
+                                       self.sound.play)
         self.display = Display(self)
         self.display.move(0, 0)
         self.display.resize(640, 320)
@@ -61,15 +62,13 @@ class StartWindow(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        self.resize(200, 100)
 
         vbox_layout = QtWidgets.QVBoxLayout()
 
-        button = QtWidgets.QPushButton(self)
-        button.setText("Start")
-        button.resize(100, 50)
-        button.clicked.connect(self.start_game)
-        vbox_layout.addWidget(button)
+        start_button = QtWidgets.QPushButton(self)
+        start_button.setText("Start")
+        start_button.clicked.connect(self.start_game)
+        vbox_layout.addWidget(start_button)
 
         change_speed_label = QtWidgets.QLabel("Speed", self)
         vbox_layout.addWidget(change_speed_label)
@@ -83,13 +82,29 @@ class StartWindow(QtWidgets.QWidget):
         self.games.addItems(game_list)
         vbox_layout.addWidget(self.games)
 
+        sprites_label = QtWidgets.QLabel("Sprites:", self)
+        vbox_layout.addWidget(sprites_label)
+
+        self.sprites = QtWidgets.QComboBox()
+        sprite_list = [sprite for sprite in os.listdir("sprites")]
+        self.sprites.addItems(sprite_list)
+        vbox_layout.addWidget(self.sprites)
+
         vbox_layout.addStretch(1)
         self.setLayout(vbox_layout)
         self.show()
 
     def start_game(self, *args, **kwargs):
-        self.window = MainWindow("games/" + self.games.currentText(),
-                                 self.sld.value())
+        path = os.path.join("sprites" , self.sprites.currentText())
+        with open(path, "rb") as f:
+            sprites = [byte for byte in f.read()]
+        if len(sprites) != 80:
+            raise Exception("Sprites length must be 80 bytes")
+        game_path = os.path.join("games", self.games.currentText())
+        self.window = MainWindow(game_path, self.sld.value(), sprites)
+
+    def change_sprites(self):
+        pass
 
 
 if __name__ == '__main__':

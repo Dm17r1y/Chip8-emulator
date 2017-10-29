@@ -7,7 +7,7 @@ import timer
 
 class Interpreter:
 
-    def __init__(self, game_file, controller,
+    def __init__(self, game_file, controller, sprites,
                  play_sound_func=timer.empty_func):
         self.controller = controller
         self.V = [memory.Register(8) for _ in range(16)]
@@ -20,29 +20,11 @@ class Interpreter:
         self.sound_timer = timer.Timer(end_timer_func=play_sound_func)
         with open(game_file, 'rb') as f:
             self.load_commands(f.read())
-        self.initialize_sprites()
+        self.initialize_sprites(sprites)
         self._need_redraw = False
 
 
-    def initialize_sprites(self):
-        sprites = [
-            0xf0, 0x90, 0x90, 0x90, 0xf0,       # 0
-            0x20, 0x60, 0x20, 0x20, 0x70,       # 1
-            0xf0, 0x10, 0xf0, 0x80, 0xf0,       # 2
-            0xf0, 0x10, 0xf0, 0x10, 0xf0,       # 3
-            0x90, 0x90, 0xf0, 0x10, 0x10,       # 4
-            0xf0, 0x80, 0xf0, 0x10, 0xf0,       # 5
-            0xf0, 0x80, 0xf0, 0x90, 0xf0,       # 6
-            0xf0, 0x10, 0x20, 0x40, 0x40,       # 7
-            0xf0, 0x90, 0xf0, 0x90, 0xf0,       # 8
-            0xf0, 0x90, 0xf0, 0x10, 0xf0,       # 9
-            0xf0, 0x90, 0xf0, 0x90, 0x90,       # A
-            0xe0, 0x90, 0xe0, 0x90, 0xe0,       # B
-            0xf0, 0x80, 0x80, 0x80, 0xf0,       # C
-            0xe0, 0x90, 0x90, 0x90, 0xe0,       # D
-            0xf0, 0x80, 0xf0, 0x80, 0xf0,       # E
-            0xf0, 0x80, 0xf0, 0x80, 0x80        # F
-        ]
+    def initialize_sprites(self, sprites):
         for i, sprite_line in enumerate(sprites):
             self.memory.store_value(i, sprite_line)
 
